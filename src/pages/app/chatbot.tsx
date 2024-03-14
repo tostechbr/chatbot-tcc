@@ -1,7 +1,6 @@
-import React, { FormEvent, useEffect, useState } from 'react'
+import React, { FormEvent, useState } from 'react'
 
-import { createAssistant } from '@/helpers/createAssistant'
-// Supondo que você tenha uma função createAssistant corretamente implementada
+import { sendMessageToChat } from '@/api/openai'
 
 interface Message {
   id: string
@@ -10,31 +9,8 @@ interface Message {
 }
 
 export function Chatbot() {
-  const [assistantId, setAssistantId] = useState<string | null>(null)
   const [messages, setMessages] = useState<Message[]>([])
   const [newMessage, setNewMessage] = useState('')
-
-  useEffect(() => {
-    const initAssistant = async () => {
-      try {
-        const assistant = await createAssistant()
-        setAssistantId(assistant.id)
-        // Inicia a conversa com uma mensagem de boas-vindas do bot
-        setMessages((prevMessages) => [
-          ...prevMessages,
-          {
-            id: 'welcome',
-            text: 'Olá, como posso ajudá-lo hoje?',
-            sender: 'bot',
-          },
-        ])
-      } catch (error) {
-        console.error('Could not initialize assistant:', error)
-      }
-    }
-
-    initAssistant()
-  }, [])
 
   const handleSendMessage = async (event: FormEvent) => {
     event.preventDefault()
@@ -51,14 +27,25 @@ export function Chatbot() {
     setMessages((prevMessages) => [...prevMessages, userMessage])
 
     try {
-      // Aqui você adicionará a lógica para enviar a mensagem para o assistente OpenAI
-      // e processar a resposta. Isso é um placeholder para a funcionalidade real.
-      // ...
+      const data = await sendMessageToChat(newMessage) // Chame a função com a mensagem do usuário
+      // Certifique-se de que o backend retorna a estrutura esperada
+      if (data && data.response) {
+        // Verifique se 'data.response' está alinhado com a estrutura de sua resposta
+        const responseText =
+          typeof data.response === 'string'
+            ? data.response
+            : JSON.stringify(data.response)
+        const botMessage: Message = {
+          id: Date.now().toString(),
+          text: responseText, // Use a string tratada aqui
+          sender: 'bot',
+        }
+        setMessages((prevMessages) => [...prevMessages, botMessage])
+      }
     } catch (error) {
       console.error('Error sending message:', error)
     }
 
-    // Limpa o campo de entrada após enviar a mensagem
     setNewMessage('')
   }
 

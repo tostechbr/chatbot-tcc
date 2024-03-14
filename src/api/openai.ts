@@ -1,16 +1,11 @@
-// src/api/openai.ts
+// src/services/openai.ts
 import axios from 'axios'
 
-const REACT_APP_OPENAI_API_KEY =
-  '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'
-// Configure o Axios com a chave da API e o cabeçalho beta necessário.
-const openaiApi = axios.create({
-  baseURL: 'https://api.openai.com/v1',
-  headers: {
-    Authorization: `Bearer ${REACT_APP_OPENAI_API_KEY}`,
-    'OpenAI-Beta': 'assistants=v1',
-    'Content-Type': 'application/json',
-  },
+const api = axios.create({
+  baseURL: 'http://localhost:3000', // Ajuste para o endereço do seu backend
 })
 
-export default openaiApi
+export const sendMessageToChat = async (message: string) => {
+  const response = await api.post('/chat', { message })
+  return response.data
+}
